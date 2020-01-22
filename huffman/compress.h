@@ -28,4 +28,14 @@ NODE* create_huff_tree(PRIORITY_QUEUE* queue);
 
 void print_tree(NODE* current);
 
+// FUNCOES DE HASH
+
+HASH* create_hash();
+
+// NOVA CODIFICACAO
+
+int transform_binary(int decimal_number, int res);
+
+void new_codification(HASH* hash, NODE* tree, int size, ushort byte);
+
 #endif
