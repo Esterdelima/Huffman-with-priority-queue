@@ -124,21 +124,20 @@ HASH* create_hash() {
     return new_hash;
 }
 
-int print_byte(ushort byte, int size) {
-    
-    for (int i = 7; i >= 0; i--) {
-        is_bit_i_set(byte, i);
-    }
-    return new_code;
-}
-
 void print_hash(HASH* hash) {
     for (int i = 0; i < 256; i++) {
-        ushort byte = hash->array[i]->code;
-        int size = hash->array[i]->size;
-        printf("caracter: %c new_code: %d\n", i, print_byte(byte, size));
+        if (hash->array[i] != NULL) {
+            ushort byte = hash->array[i]->code;
+            int size = hash->array[i]->size;
+
+            printf("caracter: %c size: %d ", i, size);
+        
+            for (int j = 7; j >= 0; j--) {
+                printf("%d", is_bit_i_set(byte, j));
+            }
+            printf("\n");
+        }
     }
-    printf("\n");
 }
 
 // NOVA CODIFICACAO
@@ -157,7 +156,6 @@ void new_codification(HASH* hash, NODE* tree, int size, ushort byte) {
         element->size = size;
         element->code = byte;
         hash->array[index] = element;
-
         return;
     }
 
@@ -185,7 +183,7 @@ int main() {
 
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
-    print_hash(hash);
+    //print_hash(hash);
 
     return 0;
 }
