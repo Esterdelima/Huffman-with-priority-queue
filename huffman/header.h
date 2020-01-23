@@ -15,6 +15,8 @@ typedef struct hash_table HASH;
 typedef struct hash_node HASH_NODE;
 typedef struct priority_queue PRIORITY_QUEUE;
 
+// NO DE FILA E DE ARVORE
+
 struct node {
     lli priority;
     uchar caracter;
@@ -23,15 +25,21 @@ struct node {
     NODE* right;
 };
 
+// FILA DE PRIORIDADE
+
 struct priority_queue {
     lli size;
     NODE* head;
 };
 
+// NO DE HASH
+
 struct element {
     int size;
     ushort code;
 };
+
+// HASH
 
 struct hash_table {
     ELEMENT* array[256];

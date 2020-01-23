@@ -34,7 +34,7 @@ HASH* create_hash();
 
 void print_hash(HASH* hash);
 
-// NOVA CODIFICACAO
+// FUNCOES NOVA CODIFICACAO
 
 void new_codification(HASH* hash, NODE* tree, int size, ushort byte);
 
