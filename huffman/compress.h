@@ -32,10 +32,14 @@ void print_tree(NODE* current);
 
 HASH* create_hash();
 
+void print_hash(HASH* hash);
+
 // NOVA CODIFICACAO
 
-int transform_binary(int decimal_number, int res);
-
 void new_codification(HASH* hash, NODE* tree, int size, ushort byte);
+
+void create_freq_array(lli* frequence);
+
+bool is_bit_i_set(ushort byte, int i);
 
 #endif

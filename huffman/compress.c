@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "header.h"
 #include "compress.h"
 
@@ -82,7 +80,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("/home/alunoic/Downloads/WhatsApp Video 2020-01-21 at 17.19.35 (1).mp4", "rb");
+    FILE* file = fopen("file.txt", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -126,26 +124,48 @@ HASH* create_hash() {
     return new_hash;
 }
 
+int print_byte(ushort byte, int size) {
+    
+    for (int i = 7; i >= 0; i--) {
+        is_bit_i_set(byte, i);
+    }
+    return new_code;
+}
+
+void print_hash(HASH* hash) {
+    for (int i = 0; i < 256; i++) {
+        ushort byte = hash->array[i]->code;
+        int size = hash->array[i]->size;
+        printf("caracter: %c new_code: %d\n", i, print_byte(byte, size));
+    }
+    printf("\n");
+}
+
 // NOVA CODIFICACAO
+
+bool is_bit_i_set(ushort byte, int i) {
+    ushort temp = 1 << i;
+    return temp & byte;
+}
 
 void new_codification(HASH* hash, NODE* tree, int size, ushort byte) {
     if (tree->left == NULL && tree->right == NULL) { // cheguei numa folha.
-        //printf("%u\n", byte);
-        printf("CARACTER EM BINÁRIO: %c %d\n", tree->caracter, transform_binary(byte, -1));
+
+        int index = tree->caracter; // pego a representação inteira do caracter(posicao na hash).
+        ELEMENT* element = (ELEMENT*) malloc(sizeof(ELEMENT)); // no vazio.
+
+        element->size = size;
+        element->code = byte;
+        hash->array[index] = element;
+
         return;
     }
+
     byte <<= 1;
     new_codification(hash, tree->left, size + 1, byte);
+
     byte++; // poe 1 no primeiro bit do byte.
     new_codification(hash, tree->right, size + 1, byte);
-}
-
-int transform_binary(int decimal_number, int res) {
-    if (!decimal_number) {
-        return 0;
-    }
-    res = decimal_number % 2;
-    return transform_binary(decimal_number / 2, res) * 10 + res;
 }
 
 int main() {
@@ -165,6 +185,7 @@ int main() {
 
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
+    print_hash(hash);
 
     return 0;
 }
