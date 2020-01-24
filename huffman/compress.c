@@ -114,6 +114,32 @@ void print_tree(NODE* current) {
     print_tree(current->right);
 }
 
+void get_pre_order_tree(NODE* tree, FILE* file) {
+    if (tree != NULL) {
+        if (tree->left == NULL && tree->right == NULL) {
+            if (tree->caracter == '*' || tree->caracter == '\\') {
+                fputc('\\', file);
+            }
+        }
+        fputc(tree->caracter, file);
+        get_pre_order_tree(tree->left, file);
+        get_pre_order_tree(tree->right, file);
+    }
+}
+
+// CALCULAR O TAMANHO DA ÁRVORE
+
+ushort get_size_tree(NODE* tree) {
+    if (tree->left == NULL && tree->right == NULL) {
+        if (tree->caracter == '*' || tree->caracter == '\\') {
+            return 2;
+        } else {
+            return 1;
+        }
+    }
+    return 1 + get_size_tree(tree->left) + get_size_tree(tree->right);
+}
+
 // FUNCOES DE HASH
 
 HASH* create_hash() {
@@ -168,7 +194,7 @@ void new_codification(HASH* hash, NODE* tree, int size, ushort byte) {
 
 // CALCULAR LIXO
 
-int get_trash(HASH* hash, lli* frequence) {
+uchar get_trash(HASH* hash, lli* frequence) {
     lli sum = 0; 
 
     for (int i = 0; i < 256; i++) {
@@ -176,7 +202,7 @@ int get_trash(HASH* hash, lli* frequence) {
             sum += hash->array[i]->size * frequence[i];
         }
     }
-    lli trash = 0; // tamanho do lixo
+    uchar trash = 0; // tamanho do lixo
     lli bits = 0; // quantia de bits usados
     lli bytes = sum / 8; // quantia de bytes alocados
 
@@ -185,8 +211,9 @@ int get_trash(HASH* hash, lli* frequence) {
         bits = bytes * 8; // quantidade de bits alocados(NAO É O TOTAL DE BITS USADOS TA!)
         trash = bits - sum;
     }
-    printf("%lld\n", trash);
 }
+
+// PRINTAR O CABEÇALHO NO ARQUIVO COMPACTADO
 
 int main() {
     PRIORITY_QUEUE* queue = create_priority_queue();
@@ -194,10 +221,7 @@ int main() {
 
     create_freq_array(frequence);
     fill_freq_array(frequence);
-    // for (int i = 0; i < 256; i++) {
-    //     printf("caracter: %c freq: %lld\n", i, frequence[i]);
-    // }
-
+   
     fill_priority_queue(frequence, queue);
 
     NODE* tree = create_huff_tree(queue);
@@ -205,8 +229,34 @@ int main() {
 
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
+    
     //print_hash(hash);
-    int trash = get_trash(hash, frequence);
+
+    uchar trash = get_trash(hash, frequence); // trash so ocupa 3 bits ou seja so alocamos 1 byte para guardar o lixo.
+    ushort size_tree = get_size_tree(tree);
+    
+    //printf("%d\n", trash);
+    
+    ushort header = 0;
+    header |= trash; 
+    header <<= 13; 
+    header = header | size_tree;
+    
+    // printf("trash %u\n", trash);
+    // printf("header %u\n", header);
+    
+    FILE* file = fopen("compacted.txt.huff", "wb");
+    uchar byte_1 = header >> 8;
+    uchar byte_2 = header; // pega so o primeiro byte da header(que tem 2 bytes)
+
+    // printf("byte 1: %d\n", byte_1);
+    // printf("byte 2: %d\n", byte_2);
+
+    fputc(byte_1, file);
+    fputc(byte_2, file);
+
+    get_pre_order_tree(tree, file);
+    fclose(file);
 
     return 0;
 }

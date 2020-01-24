@@ -28,6 +28,12 @@ NODE* create_huff_tree(PRIORITY_QUEUE* queue);
 
 void print_tree(NODE* current);
 
+void get_pre_order_tree(NODE* tree, FILE* file);
+
+// CALCULAR O TAMANHO DA ÁRVORE
+
+ushort get_size_tree(NODE* tree);
+
 // FUNCOES DE HASH
 
 HASH* create_hash();
@@ -44,6 +50,6 @@ bool is_bit_i_set(ushort byte, int i);
 
 // CALCULAR LIXO
 
-int get_trash(HASH* hash, lli* frequence);
+uchar get_trash(HASH* hash, lli* frequence);
 
 #endif
