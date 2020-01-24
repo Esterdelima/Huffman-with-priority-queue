@@ -166,6 +166,28 @@ void new_codification(HASH* hash, NODE* tree, int size, ushort byte) {
     new_codification(hash, tree->right, size + 1, byte);
 }
 
+// CALCULAR LIXO
+
+int get_trash(HASH* hash, lli* frequence) {
+    lli sum = 0; 
+
+    for (int i = 0; i < 256; i++) {
+        if (hash->array[i] != NULL) {
+            sum += hash->array[i]->size * frequence[i];
+        }
+    }
+    lli trash = 0; // tamanho do lixo
+    lli bits = 0; // quantia de bits usados
+    lli bytes = sum / 8; // quantia de bytes alocados
+
+    if (sum % 8 != 0) {
+        bytes++;
+        bits = bytes * 8; // quantidade de bits alocados(NAO É O TOTAL DE BITS USADOS TA!)
+        trash = bits - sum;
+    }
+    printf("%lld\n", trash);
+}
+
 int main() {
     PRIORITY_QUEUE* queue = create_priority_queue();
     lli frequence[256]; // ignoramos o indice zero.
@@ -184,6 +206,7 @@ int main() {
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
     //print_hash(hash);
+    int trash = get_trash(hash, frequence);
 
     return 0;
 }

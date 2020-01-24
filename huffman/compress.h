@@ -42,4 +42,8 @@ void create_freq_array(lli* frequence);
 
 bool is_bit_i_set(ushort byte, int i);
 
+// CALCULAR LIXO
+
+int get_trash(HASH* hash, lli* frequence);
+
 #endif
