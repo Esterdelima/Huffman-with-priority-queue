@@ -52,4 +52,8 @@ bool is_bit_i_set(ushort byte, int i);
 
 uchar get_trash(HASH* hash, lli* frequence);
 
+// COMPACTAR ARQUIVO TESTE
+
+void compact_file(FILE* arq_compact, HASH* hash);
+
 #endif

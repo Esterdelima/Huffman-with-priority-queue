@@ -106,9 +106,8 @@ NODE* create_huff_tree(PRIORITY_QUEUE* queue) {
 }
 
 void print_tree(NODE* current) {
-    if (current == NULL) {
-        return;
-    }
+    if (current == NULL) return;
+
     printf("caracter: %c freq: %lld\n", current->caracter, current->priority);
     print_tree(current->left);
     print_tree(current->right);
@@ -156,12 +155,12 @@ void print_hash(HASH* hash) {
             ushort byte = hash->array[i]->code;
             int size = hash->array[i]->size;
 
-            printf("caracter: %c size: %d ", i, size);
+            printf("caracter: %c size: %d code: %d\n", i, size, byte);
         
-            for (int j = 7; j >= 0; j--) {
-                printf("%d", is_bit_i_set(byte, j));
-            }
-            printf("\n");
+            // for (int j = 7; j >= 0; j--) {
+            //     printf("%d", is_bit_i_set(byte, j));
+            // }
+            //printf("\n");
         }
     }
 }
@@ -213,6 +212,46 @@ uchar get_trash(HASH* hash, lli* frequence) {
     }
 }
 
+// COMPACTAR ARQUIVO TESTE
+
+void compact_file(FILE* arq_compact, HASH* hash) {
+    FILE* read_file = fopen("file.txt", "rb");
+    uchar caracter;
+    int i = 8;
+    int size = 0;
+    int qsb = 0;
+    int to_complete = 0;
+    uchar byte = 0;
+    ushort code = 0;
+
+    while (fscanf(read_file, "%c", &caracter) != EOF) {
+        code = hash->array[caracter]->code;
+        size = hash->array[caracter]->size;
+
+        byte |= code;
+        qsb = i - size;
+
+        if (qsb > 0) {
+            byte <<= qsb;
+            i -= size;
+        } 
+        else if (qsb < 0) {
+            fprintf(arq_compact,"%c", byte);
+
+            to_complete = abs(qsb);
+            i = 8;
+            byte = 0;
+            
+            byte |= code;
+            qsb = 8 - to_complete;
+            byte <<= qsb;
+            i -= to_complete;
+        }
+    }
+    fclose(read_file);
+}
+
+
 // PRINTAR O CABEÇALHO NO ARQUIVO COMPACTADO
 
 int main() {
@@ -230,7 +269,7 @@ int main() {
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
     
-    //print_hash(hash);
+    print_hash(hash);
 
     uchar trash = get_trash(hash, frequence); // trash so ocupa 3 bits ou seja so alocamos 1 byte para guardar o lixo.
     ushort size_tree = get_size_tree(tree);
@@ -256,6 +295,8 @@ int main() {
     fputc(byte_2, file);
 
     get_pre_order_tree(tree, file);
+
+    compact_file(file, hash);
     fclose(file);
 
     return 0;
