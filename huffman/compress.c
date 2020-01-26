@@ -80,7 +80,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("file.txt", "rb");
+    FILE* file = fopen("/home/ester/Downloads/video_original.mp4", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -214,43 +214,47 @@ uchar get_trash(HASH* hash, lli* frequence) {
 
 // COMPACTAR ARQUIVO TESTE
 
-void compact_file(FILE* arq_compact, HASH* hash) {
-    FILE* read_file = fopen("file.txt", "rb");
-    uchar caracter;
-    int i = 8;
-    int size = 0;
-    int qsb = 0;
-    int to_complete = 0;
-    uchar byte = 0;
-    ushort code = 0;
+// executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
-    while (fscanf(read_file, "%c", &caracter) != EOF) {
-        code = hash->array[caracter]->code;
-        size = hash->array[caracter]->size;
+void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
+    FILE* read_file = fopen("/home/ester/Downloads/video_original.mp4", "rb"); // abro e leio o arquivo.
+    int size;
+    int quant_byte; // verifica se o byte ja esta completo com 8 bits.
+    ushort code; // salva a codificaçao do caracter lido (salvo na hash).
+    uchar caracter; // pega a leitura do caracter.
+    uchar compress_byte; // byte com a compressao.
+    
+    quant_byte = 0, compress_byte = 0, size = 0; // inicializo tudo com zero.
 
-        byte |= code;
-        qsb = i - size;
+    while (fscanf(read_file, "%c", &caracter) != EOF) { // lemos o arquivo ate o EOF.
 
-        if (qsb > 0) {
-            byte <<= qsb;
-            i -= size;
-        } 
-        else if (qsb < 0) {
-            fprintf(arq_compact,"%c", byte);
+        code = hash->array[caracter]->code; // pega a nova codificaçao (na hash) do caracter lido.
+        size = hash->array[caracter]->size - 1; // pega o tamanho dessa codificaçao.
 
-            to_complete = abs(qsb);
-            i = 8;
-            byte = 0;
+        for (size; size >= 0; size--) { 
+            // codificação com mais de um byte
+            if (is_bit_i_set(code, size)) {
+                compress_byte += 1; // poe 1 no bit mais a direita.
+            }
             
-            byte |= code;
-            qsb = 8 - to_complete;
-            byte <<= qsb;
-            i -= to_complete;
+            quant_byte += 1; // soma 1 a quantia de bits.
+            
+            if (quant_byte == 8) { // renovar o byte.
+
+                fprintf(arq_compact, "%c", compress_byte); // printa o byte no arquivo.
+                quant_byte = 0; // zera a quantia de bits.
+                compress_byte = 0; // zera o byte (0000 0000).
+
+            } 
+            compress_byte <<= 1; // shifta para frente o bit mais a dieita para nao perde-lo.
         }
     }
+    compress_byte >>= 1; // ajusta o ultimo byte, pois ele contem o ultimo bit errado. (Executar um pequeno caso na mao para ver).
+    compress_byte <<= trash_size; //  shiftei o tamanho do lixo apos o ultimo bit do ultimo byte do arquivo codificado.
+
+    fprintf(arq_compact, "%c", compress_byte); // printa o ultimo byte ajustado no arquivo.
     fclose(read_file);
 }
-
 
 // PRINTAR O CABEÇALHO NO ARQUIVO COMPACTADO
 
@@ -284,7 +288,7 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("compacted.txt.huff", "wb");
+    FILE* file = fopen("video.mp4.huff", "wb");
     uchar byte_1 = header >> 8;
     uchar byte_2 = header; // pega so o primeiro byte da header(que tem 2 bytes)
 
@@ -296,7 +300,7 @@ int main() {
 
     get_pre_order_tree(tree, file);
 
-    compact_file(file, hash);
+    compact_file(file, hash, trash);
     fclose(file);
 
     return 0;

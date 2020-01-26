@@ -54,6 +54,6 @@ uchar get_trash(HASH* hash, lli* frequence);
 
 // COMPACTAR ARQUIVO TESTE
 
-void compact_file(FILE* arq_compact, HASH* hash);
+void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size);
 
 #endif
