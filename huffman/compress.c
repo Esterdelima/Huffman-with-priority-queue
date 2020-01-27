@@ -80,7 +80,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("file.txt", "rb");
+    FILE* file = fopen("meg.mp4", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -217,7 +217,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 // executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
 void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
-    FILE* read_file = fopen("file.txt", "rb"); // abro e leio o arquivo.
+    FILE* read_file = fopen("meg.mp4", "rb"); // abro e leio o arquivo.
     int size;
     int quant_byte; // verifica se o byte ja esta completo com 8 bits.
     ushort code; // salva a codificaçao do caracter lido (salvo na hash).
@@ -277,89 +277,60 @@ NODE* construct_tree(uchar *str, int *i) {
 }
 
 void descompact() {
-    FILE* file = fopen("texto.txt.huff", "rb"); // arquivo de escrita compactada
+    FILE* file = fopen("ester.mp4.huff", "rb"); // arquivo de escrita compactada
     uchar byte_1, byte_2;
     
     fscanf(file, "%c", &byte_1); // pego o primeiro byte do arquivo compactado (que contem os 3 bits de lixo).
     fscanf(file, "%c", &byte_2); // pego o segundo byte do arquivo compactado (com parte do tamanho da arvore).
     
     // PEGA O LIXO E O TAMANHO DA ARVORE
-
-    uchar trash = byte_1 >> 5; // elimina os 5 bits do tamanho da arvore.
-    ushort size_tree = 0;
-    byte_1 <<= 3;              // elimina os 3 bits de lixo do primeiro byte do arquivo.
-    byte_1 >>= 3;              // reorganiza a posicao correta dos bits.
-    size_tree = byte_1;
-    size_tree <<= 8;           // passa os primeiros 5 bits do tamanho da arvore para o primeiro byte.
-    size_tree =  byte_2;       // passa o restante do tamanho da arvore pro 2 byte.
-
-    //printf("lixo: %d arvore: %d\n", trash, size_tree);
-
-    // PEGAR A ARVORE EM PRE-ORDEM
+    int i = 0;
+    ushort size_tree = 0; // zera os 16 bits com o tamanho da arvore.
+    ushort trash = byte_1 >> 5; // elimina os 5 bits do tamanho da arvore.
+    size_tree = byte_1 << 11; // anda 8 bits pra passar pro byte + a esquerda, +3 pra sumir c os 3 bits de lixo.
+    size_tree >>= 3; // os 3 bits de lixo voltam zerados.
+    size_tree |= byte_2; // recebe o restante do tamanho da arvore no 2 byte.
 
     uchar str[size_tree];
 
-    for (int i = 0; i < size_tree; i++) { // le a arvore em pre ordem no arquivo compacatado.
+    for (i = 0; i < size_tree; i++) { // le a arvore em pre ordem no arquivo compacatado.
         fscanf(file, "%c", &str[i]);
-        //printf("%c", str[i]);
     }
-    //printf("\n");
-    int i = 0;
     
+    i = 0;
     NODE* tree = construct_tree(str, &i);
-    //print_tree(tree);
 
-    // SALVAR UM PONTEIRO PRO INICIO DA COMPACTACAO DO ARQUIVO (sem ele teriamos que ler o arquivo novamente na h de descompactar).
-    //FILE* aux = file;
+    lli cont_bytes = 0;
+    uchar byte = 0;
 
-    // CONTAR QUANTOS BYTES O ARQUIVO COMPACTADO TEM
-
-    int cont_bytes = 0;
-    uchar c;
-    while (fscanf(file, "%c", &c) != EOF) {
+    while (fscanf(file, "%c", &byte) != EOF) {
         cont_bytes++;
     }
-    fclose(file);
-    //printf("%d\n", bytes);
-    // DECOMPACTACAO
 
-    file = fopen("texto.txt.huff", "rb");
-    
-    uchar byte;
-    int limit;
+    fseek(file, 2 + size_tree, SEEK_SET); // função de percorrer o arquivo a partir de um ponto especifico.
+
+    int limit = 0;
     NODE* current = tree;
-    FILE* descompacted = fopen("descompacted.txt", "wb");
-    // PERCORRER OS BYTES BIT A BIT 
-    
-    for (int i = 0; i < size_tree + 2; i++) { // ignorar os 2 primeiros bytes e o tamanho da arvore.
-        fscanf(file, "%c", &byte);
-    }
+    FILE* descompacted = fopen("descompacted.mp4", "wb");
 
-    for (int i = 0; i < cont_bytes; i++) { // conta os bytes percorridos.
+    for (cont_bytes; cont_bytes > 0; cont_bytes--) { // conta os bytes percorridos.
         fscanf(file, "%c", &byte);
-        //printf("%c\n", byte);
-        if (i == cont_bytes - 1) {
-            limit = (int) trash; // ultimo byte com o lixo (so verificamos esse byte ate o seu lixo).
-        }
-        else {
-            limit = 0; // o limite dos bytes sem lixo eh 0.
-        }
-
-        for (int j = 7; j >= limit; j--) {
-            //printf("here\n");
-                if (is_bit_i_set(byte, j)) {
-                    current = current->right; // 1-> direita (bit setado com 1)
-                }
-                else {
-                    current = current->left; // 0 -> esquerda (bit setado com 0)
-                }
         
-                if (current->left == NULL && current->right == NULL) { // folha, hora de printar o caracter no novo arquivo :D.
-                    
-                    fprintf(descompacted, "%c", current->caracter);
-                    printf("%c\n", current->caracter);
-                    current = tree; // ponteiro pro inicio da arvore.
-                }
+        if (cont_bytes == 1) {
+            limit = trash; // ultimo byte com o lixo (so verificamos esse byte ate o seu lixo).
+        }
+
+        for (i = 7; i >= limit; i--) {
+            if (is_bit_i_set(byte, i)) {
+                current = current->right; // 1-> direita (bit setado com 1)
+            } else {
+                current = current->left; // 0 -> esquerda (bit setado com 0)
+            }
+    
+            if (current->left == NULL && current->right == NULL) { // folha, hora de printar o caracter no novo arquivo :D.
+                fprintf(descompacted, "%c", current->caracter);
+                current = tree; // ponteiro pro inicio da arvore.
+            }
         }
     }
     fclose(file);
@@ -396,7 +367,7 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("texto.txt.huff", "wb"); // arquivo de escrita compactada
+    FILE* file = fopen("ester.mp4.huff", "wb"); // arquivo de escrita compactada
     uchar byte_1 = header >> 8;
     uchar byte_2 = header; // pega so o primeiro byte da header(que tem 2 bytes)
 
