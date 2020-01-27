@@ -58,7 +58,7 @@ void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size);
 
 // DESCOMPACTACAO
 
-void descompact();
+void descompact(); 
 
 NODE* construct_tree(uchar *str, int *i);
 
