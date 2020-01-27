@@ -1,6 +1,6 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
-#include "header.h"
+#include "/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/header/header.h"
 
 // FUNCOES DE FILA
 

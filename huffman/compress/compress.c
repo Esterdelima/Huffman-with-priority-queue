@@ -1,4 +1,4 @@
-#include "header.h"
+#include "/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/header/header.h"
 #include "compress.h"
 
 // FUNCOES FILA DE PRIORIDADE
@@ -80,7 +80,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("meg.mp4", "rb");
+    FILE* file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/file_tests/meg.mp4", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -154,13 +154,6 @@ void print_hash(HASH* hash) {
         if (hash->array[i] != NULL) {
             ushort byte = hash->array[i]->code;
             int size = hash->array[i]->size;
-
-            printf("caracter: %c size: %d code: %d\n", i, size, byte);
-        
-            // for (int j = 7; j >= 0; j--) {
-            //     printf("%d", is_bit_i_set(byte, j));
-            // }
-            //printf("\n");
         }
     }
 }
@@ -217,7 +210,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 // executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
 void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
-    FILE* read_file = fopen("meg.mp4", "rb"); // abro e leio o arquivo.
+    FILE* read_file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/file_tests/meg.mp4", "rb"); // abro e leio o arquivo.
     int size;
     int quant_byte; // verifica se o byte ja esta completo com 8 bits.
     ushort code; // salva a codificaçao do caracter lido (salvo na hash).
@@ -258,84 +251,6 @@ void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
 
 // PRINTAR O CABEÇALHO NO ARQUIVO COMPACTADO
 
-// PARTE DA DESCOMPACTCAO
-
-NODE* construct_tree(uchar *str, int *i) {
-   if (str[*i] != '*') { // no folha
-        if (str[*i] == '\\') *i += 1;
-        NODE* leaf = create_node(0, str[*i], NULL, NULL);
-        return leaf;
-   }
-   else {
-        NODE* tree = create_node(0, '*', NULL, NULL);
-        *i += 1;
-        tree->left = construct_tree(str, i);
-        *i += 1;
-        tree->right = construct_tree(str, i);
-        return tree;
-   }
-}
-
-void descompact() {
-    FILE* file = fopen("ester.mp4.huff", "rb"); // arquivo de escrita compactada
-    uchar byte_1, byte_2;
-    
-    fscanf(file, "%c", &byte_1); // pego o primeiro byte do arquivo compactado (que contem os 3 bits de lixo).
-    fscanf(file, "%c", &byte_2); // pego o segundo byte do arquivo compactado (com parte do tamanho da arvore).
-    
-    // PEGA O LIXO E O TAMANHO DA ARVORE
-    int i = 0;
-    ushort size_tree = 0; // zera os 16 bits com o tamanho da arvore.
-    ushort trash = byte_1 >> 5; // elimina os 5 bits do tamanho da arvore.
-    size_tree = byte_1 << 11; // anda 8 bits pra passar pro byte + a esquerda, +3 pra sumir c os 3 bits de lixo.
-    size_tree >>= 3; // os 3 bits de lixo voltam zerados.
-    size_tree |= byte_2; // recebe o restante do tamanho da arvore no 2 byte.
-
-    uchar str[size_tree];
-
-    for (i = 0; i < size_tree; i++) { // le a arvore em pre ordem no arquivo compacatado.
-        fscanf(file, "%c", &str[i]);
-    }
-    
-    i = 0;
-    NODE* tree = construct_tree(str, &i);
-
-    lli cont_bytes = 0;
-    uchar byte = 0;
-
-    while (fscanf(file, "%c", &byte) != EOF) {
-        cont_bytes++;
-    }
-
-    fseek(file, 2 + size_tree, SEEK_SET); // função de percorrer o arquivo a partir de um ponto especifico.
-
-    int limit = 0;
-    NODE* current = tree;
-    FILE* descompacted = fopen("descompacted.mp4", "wb");
-
-    for (cont_bytes; cont_bytes > 0; cont_bytes--) { // conta os bytes percorridos.
-        fscanf(file, "%c", &byte);
-        
-        if (cont_bytes == 1) {
-            limit = trash; // ultimo byte com o lixo (so verificamos esse byte ate o seu lixo).
-        }
-
-        for (i = 7; i >= limit; i--) {
-            if (is_bit_i_set(byte, i)) {
-                current = current->right; // 1-> direita (bit setado com 1)
-            } else {
-                current = current->left; // 0 -> esquerda (bit setado com 0)
-            }
-    
-            if (current->left == NULL && current->right == NULL) { // folha, hora de printar o caracter no novo arquivo :D.
-                fprintf(descompacted, "%c", current->caracter);
-                current = tree; // ponteiro pro inicio da arvore.
-            }
-        }
-    }
-    fclose(file);
-    fclose(descompacted);
-}
 
 int main() {
     PRIORITY_QUEUE* queue = create_priority_queue();
@@ -367,7 +282,7 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("ester.mp4.huff", "wb"); // arquivo de escrita compactada
+    FILE* file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/compressed_files/ester.mp4.huff", "wb"); // arquivo de escrita compactada
     uchar byte_1 = header >> 8;
     uchar byte_2 = header; // pega so o primeiro byte da header(que tem 2 bytes)
 
@@ -381,8 +296,6 @@ int main() {
 
     compact_file(file, hash, trash);
     fclose(file);
-
-    descompact();
 
     return 0;
 }
