@@ -80,7 +80,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("/home/ester/Downloads/video_original.mp4", "rb");
+    FILE* file = fopen("file.txt", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -217,7 +217,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 // executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
 void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
-    FILE* read_file = fopen("/home/ester/Downloads/video_original.mp4", "rb"); // abro e leio o arquivo.
+    FILE* read_file = fopen("file.txt", "rb"); // abro e leio o arquivo.
     int size;
     int quant_byte; // verifica se o byte ja esta completo com 8 bits.
     ushort code; // salva a codificaçao do caracter lido (salvo na hash).
@@ -258,6 +258,114 @@ void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
 
 // PRINTAR O CABEÇALHO NO ARQUIVO COMPACTADO
 
+// PARTE DA DESCOMPACTCAO
+
+NODE* construct_tree(uchar *str, int *i) {
+   if (str[*i] != '*') { // no folha
+        if (str[*i] == '\\') *i += 1;
+        NODE* leaf = create_node(0, str[*i], NULL, NULL);
+        return leaf;
+   }
+   else {
+        NODE* tree = create_node(0, '*', NULL, NULL);
+        *i += 1;
+        tree->left = construct_tree(str, i);
+        *i += 1;
+        tree->right = construct_tree(str, i);
+        return tree;
+   }
+}
+
+void descompact() {
+    FILE* file = fopen("texto.txt.huff", "rb"); // arquivo de escrita compactada
+    uchar byte_1, byte_2;
+    
+    fscanf(file, "%c", &byte_1); // pego o primeiro byte do arquivo compactado (que contem os 3 bits de lixo).
+    fscanf(file, "%c", &byte_2); // pego o segundo byte do arquivo compactado (com parte do tamanho da arvore).
+    
+    // PEGA O LIXO E O TAMANHO DA ARVORE
+
+    uchar trash = byte_1 >> 5; // elimina os 5 bits do tamanho da arvore.
+    ushort size_tree = 0;
+    byte_1 <<= 3;              // elimina os 3 bits de lixo do primeiro byte do arquivo.
+    byte_1 >>= 3;              // reorganiza a posicao correta dos bits.
+    size_tree = byte_1;
+    size_tree <<= 8;           // passa os primeiros 5 bits do tamanho da arvore para o primeiro byte.
+    size_tree =  byte_2;       // passa o restante do tamanho da arvore pro 2 byte.
+
+    //printf("lixo: %d arvore: %d\n", trash, size_tree);
+
+    // PEGAR A ARVORE EM PRE-ORDEM
+
+    uchar str[size_tree];
+
+    for (int i = 0; i < size_tree; i++) { // le a arvore em pre ordem no arquivo compacatado.
+        fscanf(file, "%c", &str[i]);
+        //printf("%c", str[i]);
+    }
+    //printf("\n");
+    int i = 0;
+    
+    NODE* tree = construct_tree(str, &i);
+    //print_tree(tree);
+
+    // SALVAR UM PONTEIRO PRO INICIO DA COMPACTACAO DO ARQUIVO (sem ele teriamos que ler o arquivo novamente na h de descompactar).
+    //FILE* aux = file;
+
+    // CONTAR QUANTOS BYTES O ARQUIVO COMPACTADO TEM
+
+    int cont_bytes = 0;
+    uchar c;
+    while (fscanf(file, "%c", &c) != EOF) {
+        cont_bytes++;
+    }
+    fclose(file);
+    //printf("%d\n", bytes);
+    // DECOMPACTACAO
+
+    file = fopen("texto.txt.huff", "rb");
+    
+    uchar byte;
+    int limit;
+    NODE* current = tree;
+    FILE* descompacted = fopen("descompacted.txt", "wb");
+    // PERCORRER OS BYTES BIT A BIT 
+    
+    for (int i = 0; i < size_tree + 2; i++) { // ignorar os 2 primeiros bytes e o tamanho da arvore.
+        fscanf(file, "%c", &byte);
+    }
+
+    for (int i = 0; i < cont_bytes; i++) { // conta os bytes percorridos.
+        fscanf(file, "%c", &byte);
+        //printf("%c\n", byte);
+        if (i == cont_bytes - 1) {
+            limit = (int) trash; // ultimo byte com o lixo (so verificamos esse byte ate o seu lixo).
+        }
+        else {
+            limit = 0; // o limite dos bytes sem lixo eh 0.
+        }
+
+        for (int j = 7; j >= limit; j--) {
+            //printf("here\n");
+                if (is_bit_i_set(byte, j)) {
+                    current = current->right; // 1-> direita (bit setado com 1)
+                }
+                else {
+                    current = current->left; // 0 -> esquerda (bit setado com 0)
+                }
+        
+                if (current->left == NULL && current->right == NULL) { // folha, hora de printar o caracter no novo arquivo :D.
+                    
+                    fprintf(descompacted, "%c", current->caracter);
+                    printf("%c\n", current->caracter);
+                    current = tree; // ponteiro pro inicio da arvore.
+                }
+        }
+    }
+    fclose(file);
+    fclose(descompacted);
+}
+
 int main() {
     PRIORITY_QUEUE* queue = create_priority_queue();
     lli frequence[256]; // ignoramos o indice zero.
@@ -268,12 +376,12 @@ int main() {
     fill_priority_queue(frequence, queue);
 
     NODE* tree = create_huff_tree(queue);
-    //print_tree(tree);
 
     HASH* hash = create_hash();
     new_codification(hash, tree, 0, 0); 
     
-    print_hash(hash);
+    //print_hash(hash);
+    //print_tree(tree);
 
     uchar trash = get_trash(hash, frequence); // trash so ocupa 3 bits ou seja so alocamos 1 byte para guardar o lixo.
     ushort size_tree = get_size_tree(tree);
@@ -288,7 +396,7 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("video.mp4.huff", "wb");
+    FILE* file = fopen("texto.txt.huff", "wb"); // arquivo de escrita compactada
     uchar byte_1 = header >> 8;
     uchar byte_2 = header; // pega so o primeiro byte da header(que tem 2 bytes)
 
@@ -302,6 +410,8 @@ int main() {
 
     compact_file(file, hash, trash);
     fclose(file);
+
+    descompact();
 
     return 0;
 }
