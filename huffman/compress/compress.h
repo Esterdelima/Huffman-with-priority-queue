@@ -30,6 +30,8 @@ void print_tree(NODE* current);
 
 void get_pre_order_tree(NODE* tree, FILE* file);
 
+bool is_leaf(NODE* current);
+
 // CALCULAR O TAMANHO DA ÁRVORE
 
 ushort get_size_tree(NODE* tree);

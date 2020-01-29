@@ -4,11 +4,11 @@
 // FUNCAO DE CRIAR UM NO
 
 NODE_DESCOM* create_node(uchar caracter, NODE_DESCOM* left, NODE_DESCOM* right) {
-
     NODE_DESCOM* new_node = (NODE_DESCOM*) malloc(sizeof(NODE_DESCOM));
-    new_node->caracter = caracter; // representacao do caracter na ASCII.
-    new_node->left = left;
-    new_node->right = right;
+
+    new_node -> (uchar*)caracter = caracter; // representacao do caracter na ASCII.
+    new_node -> left = left;
+    new_node -> right = right;
 
     return new_node;
 }
@@ -16,7 +16,7 @@ NODE_DESCOM* create_node(uchar caracter, NODE_DESCOM* left, NODE_DESCOM* right) 
 // FUNCAO QUE VERIFICA SE EH UMA FOLHA
 
 bool is_leaf(NODE_DESCOM* current) {
-    if (current->left == NULL && current->right == NULL) return true;
+    if (current -> left == NULL && current -> right == NULL) return true;
     else return false;
 }
 
@@ -100,13 +100,13 @@ void descompact() {
 
         for (i = 7; i >= limit; i--) {
             if (is_bit_i_set(byte, i)) {
-                current = current->right; // 1-> direita (bit setado com 1)
-            } else {
-                current = current->left; // 0 -> esquerda (bit setado com 0)
+                current = current -> right; // 1-> direita (bit setado com 1)
+            } 
+            else {
+                current = current -> left; // 0 -> esquerda (bit setado com 0)
             }
-    
             if (is_leaf(current)) { // folha, hora de printar o caracter no novo arquivo :D.
-                fprintf(descompacted, "%c", current->caracter);
+                fprintf(descompacted, "%c", current -> (uchar*)caracter);
                 current = tree; // ponteiro pro inicio da arvore.
             }
         }
