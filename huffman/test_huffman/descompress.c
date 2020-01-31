@@ -1,12 +1,15 @@
-#include "/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/header/header.h"
+#include "header.h"
 #include "descompress.h"
 
 // FUNCAO DE CRIAR UM NO
 
 NODE_DESCOM* create_node(uchar caracter, NODE_DESCOM* left, NODE_DESCOM* right) {
     NODE_DESCOM* new_node = (NODE_DESCOM*) malloc(sizeof(NODE_DESCOM));
+    // cast pro caracter
+    uchar* aux = (uchar*) malloc(sizeof(uchar));
+    *aux = caracter;
+    new_node -> caracter = aux; // representacao do caracter na ASCII.
 
-    new_node -> (uchar*)caracter = caracter; // representacao do caracter na ASCII.
     new_node -> left = left;
     new_node -> right = right;
 
@@ -48,7 +51,7 @@ bool is_bit_i_set(ushort byte, int i) {
 // FUNCAO DE DESCOMPRESSAO
 
 void descompact() {
-    FILE* file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/compressed_files/ester.mp4.huff", "rb"); // arquivo de escrita compactada
+    FILE* file = fopen("ester.mp4.huff", "rb"); // arquivo de escrita compactada
     uchar byte_1, byte_2;
     
     fscanf(file, "%c", &byte_1); // pego o primeiro byte do arquivo compactado (que contem os 3 bits de lixo).
@@ -89,7 +92,7 @@ void descompact() {
 
     int limit = 0;
     NODE_DESCOM* current = tree; 
-    FILE* descompacted = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/decompressed_files/descompacted.mp4", "wb");
+    FILE* descompacted = fopen("descompacted.mp4", "wb");
 
     for (cont_bytes; cont_bytes > 0; cont_bytes--) { // conta os bytes percorridos.
         fscanf(file, "%c", &byte);
@@ -106,7 +109,7 @@ void descompact() {
                 current = current -> left; // 0 -> esquerda (bit setado com 0)
             }
             if (is_leaf(current)) { // folha, hora de printar o caracter no novo arquivo :D.
-                fprintf(descompacted, "%c", current -> (uchar*)caracter);
+                fprintf(descompacted, "%c", *((uchar*) ((NODE_DESCOM*) (current -> caracter))) );
                 current = tree; // ponteiro pro inicio da arvore.
             }
         }

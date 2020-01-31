@@ -1,6 +1,6 @@
 #ifndef DESCOMPRESS_H
 #define DESCOMPRESS_H
-#include "/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/header/header.h"
+#include "header.h"
 
 // FUNCAO DE CRIAR UM NO
 

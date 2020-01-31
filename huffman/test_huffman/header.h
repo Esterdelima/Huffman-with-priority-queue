@@ -21,8 +21,8 @@ typedef struct priority_queue PRIORITY_QUEUE;
 
 struct node_tree_descompress {
     void* caracter; // uchar
-    NODE* left; // NODE_DESCOM
-    NODE* right; // NODE_DESCOM
+    NODE_DESCOM* left; 
+    NODE_DESCOM* right; 
 };
 
 // NO DE FILA E DE ARVORE
@@ -30,16 +30,16 @@ struct node_tree_descompress {
 struct node {
     lli priority;
     void* caracter; // uchar
-    NODE* next; // NODE
-    NODE* left; // NODE
-    NODE* right; // NODE
+    NODE* next; 
+    NODE* left; 
+    NODE* right; 
 };
 
 // FILA DE PRIORIDADE
 
 struct priority_queue {
     lli size;
-    NODE* head; // NODE
+    NODE* head; 
 };
 
 // NO DE HASH

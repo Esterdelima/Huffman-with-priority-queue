@@ -1,11 +1,11 @@
-#include "/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/header/header.h"
+#include "header.h"
 #include "compress.h"
 
 // FUNCOES FILA DE PRIORIDADE
 
 PRIORITY_QUEUE* create_priority_queue() {
     PRIORITY_QUEUE* queue = (PRIORITY_QUEUE*) malloc(sizeof(PRIORITY_QUEUE));
-    
+
     queue -> head = NULL; 
     queue -> size = 0;
 
@@ -14,7 +14,6 @@ PRIORITY_QUEUE* create_priority_queue() {
 
 void fill_priority_queue(lli frequence[], PRIORITY_QUEUE* queue) {
     for (int i = 0; i < 256; i++) {
-        
         if (frequence[i] != 0) {
             NODE* new_node = create_node(frequence[i], i, NULL, NULL);
             enqueue(new_node, queue);
@@ -54,9 +53,10 @@ NODE* dequeue(PRIORITY_QUEUE* queue) {
 }
 
 void print_queue(NODE* current) {
+    printf("*** QUEUE ***\n\n");
     while (current != NULL) {
 
-        printf("%c %lld\n", *(uchar*)current -> caracter, current -> priority);
+        printf("caracter: %c %lld\n", *((uchar*)(current -> caracter)), current -> priority);
         current = current->next;
     }
     printf("\n");
@@ -66,9 +66,12 @@ void print_queue(NODE* current) {
 
 NODE* create_node(lli priority, uchar caracter, NODE* left, NODE* right) {
     NODE* new_node = (NODE*) malloc(sizeof(NODE));
+    // parte do cast do caracter *void
+    uchar* aux = (uchar*) malloc(sizeof(uchar)); // aloco para nao ser uma variavel temporaria na funcao.
+    *aux = caracter;
+    new_node -> caracter = aux; // representacao do caracter na ASCII.
 
     new_node -> priority = priority;
-    *(uchar*)new_node -> caracter = caracter; // representacao do caracter na ASCII.
     new_node -> left = left;
     new_node -> right = right;
     new_node -> next = NULL;
@@ -85,7 +88,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/file_tests/meg.mp4", "rb");
+    FILE* file = fopen("meg.mp4", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -113,7 +116,7 @@ NODE* create_huff_tree(PRIORITY_QUEUE* queue) {
 void print_tree(NODE* current) {
     if (current == NULL) return;
 
-    printf("caracter: %c freq: %lld\n", *(uchar*)current -> caracter, current -> priority);
+    printf("caracter: %c freq: %lld\n", *((uchar*) (current -> caracter)), current -> priority);
     print_tree(current -> left);
     print_tree(current -> right);
 }
@@ -121,11 +124,12 @@ void print_tree(NODE* current) {
 void get_pre_order_tree(NODE* tree, FILE* file) {
     if (tree != NULL) {
         if (is_leaf(tree)) { // se cheguei numa folha
-            if (*(uchar*)tree -> caracter == '*' || *(uchar*)tree -> caracter == '\\') {
+        
+            if ( (*(uchar*)(tree -> caracter)) == '*' || *((uchar*)(tree -> caracter)) == '\\') {
                 fputc('\\', file);
             }
         }
-        fputc(*(uchar*)tree -> caracter, file);
+        fputc(*((uchar*)(tree -> caracter)), file);
         get_pre_order_tree(tree -> left, file);
         get_pre_order_tree(tree -> right, file);
     }
@@ -140,7 +144,7 @@ bool is_leaf(NODE* current) {
 
 ushort get_size_tree(NODE* tree) {
     if (is_leaf(tree)) { // se cheguei numa folha
-        if (*(uchar*)tree -> caracter == '*' || *(uchar*)tree -> caracter == '\\') {
+        if ( *((uchar*) (tree -> caracter)) == '*' || *((uchar*)(tree -> caracter)) == '\\') {
             return 2;
         } else {
             return 1;
@@ -165,9 +169,9 @@ void print_hash(HASH* hash) {
     int size;
 
     for (int i = 0; i < 256; i++) {
-        if (hash->array[i] != NULL) {
-            byte = hash->array[i]->code;
-            size = hash->array[i]->size;
+        if (hash -> array[i] != NULL) {
+            byte = *((ushort*) ((ELEMENT*) (hash -> array[i])) -> code);
+            size = ((ELEMENT*) (hash -> array[i])) -> size;
 
             printf("new_code: %u size: %d\n", byte, size);
         }
@@ -183,12 +187,15 @@ bool is_bit_i_set(ushort byte, int i) {
 
 void new_codification(HASH* hash, NODE* tree, int size, ushort byte) {
     if (is_leaf(tree)) { // se cheguei numa folha (achei uma caracter).
+        // crio um elemento.
+        ELEMENT* element = (ELEMENT*) malloc(sizeof(ELEMENT)); 
+        int index = *((uchar*) (tree -> caracter)); // pego a representação inteira do caracter (indice na hash).
+        // parte do cast
+        ushort* aux = (ushort*) malloc(sizeof(ushort)); // aloco uma posicao na memoria que ira salvar meu byte.
+        *aux = byte;        
 
-        ELEMENT* element = (ELEMENT*) malloc(sizeof(ELEMENT)); // crio um no vazio.
-        int index = *(uchar*)tree -> caracter; // pego a representação inteira do caracter (indice na hash).
-        
+        element -> code = aux;
         element -> size = size;
-        *(ushort*)element -> code = byte;
         hash -> array[index] = element;
         
         return;
@@ -207,7 +214,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 
     for (int i = 0; i < 256; i++) {
         if (hash -> array[i] != NULL) {
-            sum += *(ELEMENT*)hash -> array[i] -> size * frequence[i];
+            sum += ((ELEMENT*) hash -> array[i]) -> size * frequence[i];
         }
     }
     uchar trash = 0; // tamanho do lixo
@@ -226,7 +233,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 // executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
 void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
-    FILE* read_file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/file_tests/meg.mp4", "rb"); // abro e leio o arquivo.
+    FILE* read_file = fopen("meg.mp4", "rb"); // abro e leio o arquivo.
     int size;
     int quant_bits;      // verifica se o byte ja esta completo com 8 bits.
     ushort code;         // salva a codificaçao do caracter lido (salvo na hash).
@@ -237,8 +244,8 @@ void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
 
     while (fscanf(read_file, "%c", &caracter) != EOF) { // lemos o arquivo ate o EOF.
 
-        code = *(ELEMENT*)hash->array[caracter]->code;     // pega a nova codificaçao (na hash) do caracter lido.
-        size = *(ELEMENT*)hash->array[caracter]->size - 1; // pega o tamanho dessa codificaçao.
+        code = *((ushort*) ((ELEMENT*) (hash->array[caracter]))->code);     // pega a nova codificaçao (na hash) do caracter lido.
+        size = ((ELEMENT*) (hash->array[caracter]))->size - 1; // pega o tamanho dessa codificaçao.
 
         for (size; size >= 0; size--) { 
             
@@ -273,7 +280,7 @@ int main() {
    
     PRIORITY_QUEUE* queue = create_priority_queue();
     fill_priority_queue(frequence, queue);
-
+    //print_queue(queue->head);
     NODE* tree = create_huff_tree(queue);
 
     HASH* hash = create_hash();
@@ -284,10 +291,8 @@ int main() {
 
     uchar trash = get_trash(hash, frequence); // trash so ocupa 3 bits, por isso so alocamos 1 byte para guardar o lixo.
     ushort size_tree = get_size_tree(tree);
-    
-    //printf("%d\n", trash);
 
-    // COMENTARIOS USANDO O EXEMPLO DO MARCIO: PARA LIXO = 5 OU 0000 0101 (em binario)
+    // // COMENTARIOS USANDO O EXEMPLO DO MARCIO: PARA LIXO = 5 OU 0000 0101 (em binario)
 
     ushort header = 0; // zera os 16 bits (2 bytes): 00000000 00000000
     header |= trash;  // agora ficou assim: 000000 00000101 (ultimo byte eh o lixo em binario)
@@ -297,12 +302,12 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("/home/ester/Documentos/p2/Huffman-with-priority-queue/huffman/compressed_files/ester.mp4.huff", "wb"); // arquivo de escrita compactada
+    FILE* file = fopen("ester.mp4.huff", "wb"); // arquivo de escrita compactada
     uchar byte_1 = header >> 8; // pega so o primeiro byte da header(que tem 2 bytes)
     uchar byte_2 = header; // nao precisa shiftar, como o byte 2 so tem 1 byte, ele pega o segundo byte da header.
 
-    // printf("byte 1: %d\n", byte_1);
-    // printf("byte 2: %d\n", byte_2);
+    //printf("byte 1: %d\n", byte_1);
+    //printf("byte 2: %d\n", byte_2);
 
     fputc(byte_1, file);
     fputc(byte_2, file);
