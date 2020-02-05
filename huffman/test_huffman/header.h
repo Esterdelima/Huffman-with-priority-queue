@@ -52,7 +52,7 @@ struct element {
 // HASH
 
 struct hash_table {
-    void* array[256]; // ELEMENT
+    ELEMENT* array[256];
 };
 
 #endif

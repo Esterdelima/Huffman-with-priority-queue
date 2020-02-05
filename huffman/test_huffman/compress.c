@@ -88,7 +88,7 @@ void create_freq_array(lli* frequence) {
 }
 
 void fill_freq_array(lli* frequence) {
-    FILE* file = fopen("meg.mp4", "rb");
+    FILE* file = fopen("bandeira.jpg", "rb");
     uchar caracter;
 
     while (fscanf(file, "%c", &caracter) != EOF) {
@@ -170,8 +170,8 @@ void print_hash(HASH* hash) {
 
     for (int i = 0; i < 256; i++) {
         if (hash -> array[i] != NULL) {
-            byte = *((ushort*) ((ELEMENT*) (hash -> array[i])) -> code);
-            size = ((ELEMENT*) (hash -> array[i])) -> size;
+            byte = *(ushort*) (hash -> array[i] -> code);
+            size = hash -> array[i] -> size;
 
             printf("new_code: %u size: %d\n", byte, size);
         }
@@ -214,7 +214,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 
     for (int i = 0; i < 256; i++) {
         if (hash -> array[i] != NULL) {
-            sum += ((ELEMENT*) hash -> array[i]) -> size * frequence[i];
+            sum += hash -> array[i] -> size * frequence[i];
         }
     }
     uchar trash = 0; // tamanho do lixo
@@ -233,7 +233,7 @@ uchar get_trash(HASH* hash, lli* frequence) {
 // executar um caso pequeno para entender a funcao, ela eh facil, so entender com calma :D
 
 void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
-    FILE* read_file = fopen("meg.mp4", "rb"); // abro e leio o arquivo.
+    FILE* read_file = fopen("bandeira.jpg", "rb"); // abro e leio o arquivo.
     int size;
     int quant_bits;      // verifica se o byte ja esta completo com 8 bits.
     ushort code;         // salva a codificaçao do caracter lido (salvo na hash).
@@ -244,8 +244,8 @@ void compact_file(FILE* arq_compact, HASH* hash, uchar trash_size) {
 
     while (fscanf(read_file, "%c", &caracter) != EOF) { // lemos o arquivo ate o EOF.
 
-        code = *((ushort*) ((ELEMENT*) (hash->array[caracter]))->code);     // pega a nova codificaçao (na hash) do caracter lido.
-        size = ((ELEMENT*) (hash->array[caracter]))->size - 1; // pega o tamanho dessa codificaçao.
+        code = *(ushort*) (hash -> array[caracter] -> code);     // pega a nova codificaçao (na hash) do caracter lido.
+        size = hash->array[caracter] -> size - 1; // pega o tamanho dessa codificaçao.
 
         for (size; size >= 0; size--) { 
             
@@ -302,7 +302,7 @@ int main() {
     // printf("trash %u\n", trash);
     // printf("header %u\n", header);
     
-    FILE* file = fopen("ester.mp4.huff", "wb"); // arquivo de escrita compactada
+    FILE* file = fopen("bandeira.jpg.huff", "wb"); // arquivo de escrita compactada
     uchar byte_1 = header >> 8; // pega so o primeiro byte da header(que tem 2 bytes)
     uchar byte_2 = header; // nao precisa shiftar, como o byte 2 so tem 1 byte, ele pega o segundo byte da header.
 

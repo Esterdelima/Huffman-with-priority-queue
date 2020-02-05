@@ -51,7 +51,7 @@ bool is_bit_i_set(ushort byte, int i) {
 // FUNCAO DE DESCOMPRESSAO
 
 void descompact() {
-    FILE* file = fopen("ester.mp4.huff", "rb"); // arquivo de escrita compactada
+    FILE* file = fopen("bandeira.jpg.huff", "rb"); // arquivo de escrita compactada
     uchar byte_1, byte_2;
     
     fscanf(file, "%c", &byte_1); // pego o primeiro byte do arquivo compactado (que contem os 3 bits de lixo).
@@ -92,7 +92,7 @@ void descompact() {
 
     int limit = 0;
     NODE_DESCOM* current = tree; 
-    FILE* descompacted = fopen("descompacted.mp4", "wb");
+    FILE* descompacted = fopen("descompacted.jpg", "wb");
 
     for (cont_bytes; cont_bytes > 0; cont_bytes--) { // conta os bytes percorridos.
         fscanf(file, "%c", &byte);
